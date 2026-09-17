@@ -12,7 +12,7 @@ target_bot_entity = None
 api_id = '39300763'     
 api_hash = 'ff7e61213afea67d31fa33d7e667e659'    
 
-session_string = os.environ.get("SESSION_STRING") 
+session_string = os.environ.get("BQJXrpsAmmAp37XzBXbIGVpFXbY_fJ6xzlaIkKN6CeLQF39cD313WS5gmHVIsahCoiDMr_E63dBV-77knzDmQMzhoVk8_NNOiNeFjdmG5i-H7o0t7rsX3yP9cEO63kDHm4nnwig8bJIvU_nC9YQcIbITw-yLHKztkduVU6YiPer1wTUo1i6xdV6QACDN0vnOe6FW0ICr9dQNRLMlJyn7d1_lGBwyY2fw64LF3Vv0Q1H69JO0KSoE9EJPGaGShIcysfz24cjs4BXwW8SiOfOENTQxHoE4Fs6koxmJEqBfJfmUD1u-a_Oapx-ly3RMvw8w2zGRqeNkTCd7J_Ihx_kQ8wP1IRcJGAAAAAHS6kLCAA") 
 client = TelegramClient(StringSession(session_string), api_id, api_hash)
 
 last_hunt_sent_time = 0
