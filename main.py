@@ -7,8 +7,8 @@ from telethon import TelegramClient, events
 target_bot = 8416087176
 target_bot_entity = None
 
-api_id = 'YOUR_API_ID'     
-api_hash = 'YOUR_API_HASH'    
+api_id = '39300763'     
+api_hash = 'ff7e61213afea67d31fa33d7e667e659'    
 session_name = 'bish.session'
 client = TelegramClient(session_name, api_id, api_hash)
 
