@@ -7,20 +7,17 @@ from telethon import TelegramClient, events
 target_bot = 8416087176
 target_bot_entity = None
 
-api_id = '
-api_hash = ''
-session = '"
-client = TelegramClient('bish.session', api_id, api_hash)
+api_id = 'YOUR_API_ID'     
+api_hash = 'YOUR_API_HASH'    
+session_name = 'bish.session'
+client = TelegramClient(session_name, api_id, api_hash)
 
-# State management for response-driven hunting
 last_hunt_sent_time = 0
 waiting_for_hunt_response = False
 is_in_battle = False
 current_wild_pokemon = ""
 hunt_lock = asyncio.Lock()
-
-# Target Pokémon lists
-repeat_ball = []  # Add Pokémon names here to throw Repeat Ball
+repeat_ball = []
 
 ultra_ball = [
     "Abomasnow", "Abra", "Absol", "Accelgor", "Aerodactyl", "Aggron", "Alakazam", "Altaria", "Amaura", "Ampharos",
@@ -59,7 +56,7 @@ def get_wait_time():
     return round(random.uniform(1.2, 1.8), 2)
 
 def get_target_ball_keywords():
-global current_wild_pokemon
+    global current_wild_pokemon # Sahi indentation
     if current_wild_pokemon in repeat_ball:
         return ["repeat ball", "repeat"], "Repeat Ball"
     return ["ultra ball", "ultra"], "Ultra Ball"
@@ -92,7 +89,6 @@ async def send_hunt_command():
             except Exception as e2:
                 print(f"[LOG] ⚠️ Fallback send_message failed: {e2}")
 
-# Watchdog if target bot does not respond within 5.0 seconds
 async def response_watchdog():
     global last_hunt_sent_time, waiting_for_hunt_response, is_in_battle
     while True:
@@ -111,7 +107,6 @@ async def global_response_listener(event):
     if event.input_sender:
         target_bot_entity = event.input_sender
 
-# Helper function to find and click button object directly by matching keywords
 async def find_and_click_button(event, target_keywords):
     if not event.buttons:
         return False
@@ -138,7 +133,6 @@ async def find_and_click_button(event, target_keywords):
                                 return False
     return False
 
-# Helper function to click button by index
 async def click_button_by_index(event, row_idx=0, col_idx=0):
     if event.buttons and len(event.buttons) > row_idx and len(event.buttons[row_idx]) > col_idx:
         button = event.buttons[row_idx][col_idx]
@@ -150,11 +144,10 @@ async def click_button_by_index(event, row_idx=0, col_idx=0):
             await event.click(row_idx, col_idx)
             return True
     else:
-print(f"[LOG] 🔘 Clicking fallback position ({row_idx}, {col_idx})")
+        print(f"[LOG] 🔘 Clicking fallback position ({row_idx}, {col_idx})") # Sahi indentation
         await event.click(row_idx, col_idx)
         return True
 
-# Helper function to parse Wild Pokemon HP and Name
 def extract_wild_pokemon_info(text):
     name_match = re.search(r"Wild\s+([A-Za-z0-9\-\.\s]+?)(?=\s*\[|\s*\n|\s*Lv)", text)
     hp_match = re.search(r"HP\s*(\d+)\s*/\s*(\d+)", text)
@@ -168,13 +161,11 @@ def extract_wild_pokemon_info(text):
         return pok_name, current_hp, max_hp, percentage
     return pok_name, None, None, None
 
-
 @client.on(events.NewMessage(from_users=target_bot))
 async def dailyLimit(event):
     if "Daily hunt limit reached" in event.raw_text:
         print("[LOG] 🛑 Daily hunt limit reached! Disconnecting client...")
         await client.disconnect()
-
 
 @client.on(events.NewMessage(from_users=target_bot))
 @client.on(events.MessageEdited(from_users=target_bot))
@@ -187,7 +178,6 @@ async def pokeSwitch(event):
         print(f"[LOG] 🔄 'Choose your next Pokemon' detected! Waiting {wait_time}s before clicking index (0, 0)...")
         await asyncio.sleep(wait_time)
         await click_button_by_index(event, 0, 0)
-
 
 @client.on(events.NewMessage(from_users=target_bot))
 @client.on(events.MessageEdited(from_users=target_bot))
@@ -214,7 +204,6 @@ async def ball_selection_handler(event):
         if not clicked:
             print(f"[LOG] 🔴 '{ball_name}' click fallback to index (0, 0)...")
             await click_button_by_index(event, 0, 0)
-
 
 @client.on(events.NewMessage(from_users=target_bot))
 async def hunt_or_pass(event):
@@ -245,12 +234,12 @@ async def hunt_or_pass(event):
             is_in_battle = False
             await asyncio.sleep(wait_time)
             await send_hunt_command()
+
 @client.on(events.MessageEdited(from_users=target_bot))
 async def battle_handler(event):
     global is_in_battle, current_wild_pokemon
     text = event.raw_text
     
-    # Process only battle messages containing Wild and HP info, avoiding finished messages
     finish_keywords = ["ran away safely", "you earned", "fled", "you caught", "caught", "💵"]
     if "Wild" in text and "HP" in text and not any(sub in text.lower() for sub in finish_keywords):
         is_in_battle = True
@@ -263,7 +252,6 @@ async def battle_handler(event):
             
         print(f"[LOG] ⚔️ Battle Response Received | Opponent: {pok_name if pok_name else 'Wild'} | HP: {wild_curr_hp}/{wild_max_hp} ({hp_pct}%)")
         
-        # Check if False Swipe move is available in message text or button options
         has_false_swipe = False
         if "false swipe" in text.lower():
             has_false_swipe = True
@@ -276,9 +264,6 @@ async def battle_handler(event):
         
         print(f"[LOG] 🔍 Checking moves... False Swipe Available: {has_false_swipe}")
         
-        # Target requirement:
-        # If False Swipe is available: attack until opponent HP <= 1
-        # Else: attack until opponent HP <= 40%
         req_met = (wild_curr_hp <= 1) if has_false_swipe else (hp_pct <= 40)
         wait_time = get_wait_time()
         
@@ -286,7 +271,6 @@ async def battle_handler(event):
             target_keywords, ball_name = get_target_ball_keywords()
             print(f"[LOG] 🎯 Catch requirement met! (False Swipe: {has_false_swipe}, HP: {wild_curr_hp}/{wild_max_hp} [{hp_pct}%]). Selected Ball: {ball_name}")
             
-            # Step 1: If target ball button is already visible in current menu, click it directly!
             ball_clicked = False
             if event.buttons:
                 for row in event.buttons:
@@ -303,7 +287,6 @@ async def battle_handler(event):
                 await find_and_click_button(event, target_keywords)
                 return
                 
-            # Step 2: If target ball is not present yet, click Poke Ball to open ball selection menu
             print(f"[LOG] 📦 Opening ball menu. Waiting {wait_time}s before clicking 'Poke Ball'...")
             await asyncio.sleep(wait_time)
             poke_ball_clicked = await find_and_click_button(event, ["poke ball", "poke balls", "ball"])
@@ -322,10 +305,6 @@ async def battle_handler(event):
                 await asyncio.sleep(wait_time)
                 await click_button_by_index(event, 0, 0)
 
-
-@client.on(events.NewMessage(from_users=target_bot))
-@client.on(events.MessageEdited(from_users=target_bot))
-
 @client.on(events.NewMessage(from_users=target_bot))
 async def skip(event):
     global is_in_battle
@@ -338,7 +317,6 @@ async def skip(event):
         await asyncio.sleep(wait_time)
         await send_hunt_command()
 
-
 @client.on(events.NewMessage(from_users=target_bot))
 async def skipTrainer(event):
     global is_in_battle
@@ -349,12 +327,10 @@ async def skipTrainer(event):
         await asyncio.sleep(wait_time)
         await send_hunt_command()
 
-
 async def main():
     await client.start()
     print(f"[LOG] 🚀 Telegram Client started targeting Bot ID: {target_bot}")
     
-    # Load dialogs to pre-cache all chat entities in Telethon session
     try:
         await client.get_dialogs(limit=50)
     except Exception:
@@ -365,5 +341,5 @@ async def main():
     await send_hunt_command()
     await client.run_until_disconnected()
 
-if name == 'main':
+if __name__ == '__main__':
     client.loop.run_until_complete(main())
