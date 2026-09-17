@@ -1,16 +1,19 @@
+import os
 import asyncio
 import re
 import random
 import time
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 
 target_bot = 8416087176
 target_bot_entity = None
 
 api_id = '39300763'     
 api_hash = 'ff7e61213afea67d31fa33d7e667e659'    
-session_name = 'bish.session'
-client = TelegramClient(session_name, api_id, api_hash)
+
+session_string = os.environ.get("SESSION_STRING") 
+client = TelegramClient(StringSession(session_string), api_id, api_hash)
 
 last_hunt_sent_time = 0
 waiting_for_hunt_response = False
